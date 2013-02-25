@@ -18,12 +18,14 @@ library
   exposed-modules:
     System.Log.Lookout
     System.Log.Lookout.Types
+    System.Log.Lookout.Transport.HttpConduit
   -- other-modules:
   build-depends:
     base ==4.*,
     random, uuid,
     time, old-locale,
-    aeson, bytestring, text, unordered-containers
+    aeson, bytestring, text, unordered-containers,
+    http-conduit, network
 
 test-suite test
   type: exitcode-stdio-1.0

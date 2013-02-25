@@ -6,6 +6,7 @@ import qualified Data.HashMap.Strict as HM
 
 import System.Log.Lookout (record, recordLBS)
 import System.Log.Lookout.Types as LT
+import System.Log.Lookout.Transport.HttpConduit (sendRecord)
 
 main :: IO ()
 main = hspec $ do
@@ -34,6 +35,17 @@ main = hspec $ do
     it "serializes as JSON" $ do
         r <- record "test.logger" Debug "test record please ignore" strip
         recordLBS r `shouldBe` testRecordLBS
+
+  describe "Transport.HttpConduit" $ do
+    it "ignores record when service is disabled" $ do
+        r <- record "test.logger" Debug "test record please ignore" id
+        ok <- sendRecord (fromDSN "") r
+        ok `shouldBe` ()
+
+    it "sends a record" $ do
+        r <- record "test.logger" Debug "test record please ignore" id
+        ok <- sendRecord (fromDSN "http://test:test@localhost:19876/lookout") r
+        ok `shouldBe` ()
 
 dsn = "http://public_key:secret_key@example.com/sentry/project-id"
 
