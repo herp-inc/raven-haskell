@@ -1,7 +1,7 @@
 {-# LANGUAGE ViewPatterns #-}
 module System.Log.Lookout.Types
     ( SentrySettings(..), fromDSN, endpointURL
-    , SentryLevel(..), SentryRecord(..), newRecord
+    , SentryLevel(..), SentryRecord(..), newRecord, record
     ) where
 
 -- * Service settings
@@ -55,26 +55,36 @@ data SentryLevel = Fatal
                  | Info
                  | Debug
                  | Custom String
-                 deriving (Show, Read)
+                 deriving (Show, Read, Eq)
 
 type Assoc = [(String, String)]
 
-data SentryRecord = SentryRecord { srEventId    :: String
-                                 , srMessage    :: String
-                                 , srTimestamp  :: String
-                                 , srLevel      :: SentryLevel
-                                 , srLogger     :: String
+data SentryRecord = SentryRecord { srEventId    :: !String
+                                 , srMessage    :: !String
+                                 , srTimestamp  :: !String
+                                 , srLevel      :: !SentryLevel
+                                 , srLogger     :: !String
                                  , srPlatform   :: Maybe String
                                  , srCulprit    :: Maybe String
-                                 , srTags       :: Assoc
+                                 , srTags       :: !Assoc
                                  , srServerName :: Maybe String
-                                 , srModules    :: Assoc
-                                 , srExtra      :: Assoc
+                                 , srModules    :: !Assoc
+                                 , srExtra      :: !Assoc
                                  , srInterfaces :: [(String, Assoc)]
-                                 } deriving (Show)
+                                 } deriving (Show, Eq)
 
 newRecord :: String -> String -> String -> SentryLevel -> String -> SentryRecord
 newRecord eid m t lev logger =
     SentryRecord
         eid m t lev logger
         Nothing Nothing [] Nothing [] [] []
+
+record :: String                         -- ^ Logger name.
+       -> SentryLevel                    -- ^ Level
+       -> String                         -- ^ Message
+       -> (SentryRecord -> SentryRecord) -- ^ Additional options
+       -> IO SentryRecord
+record logger lvl msg upd = do
+    eid <- return "0123456789abcdef0123456789abcdef"
+    ts <- return "YYYY-mm-dd HH:MM:SS.ns"
+    return $! upd (newRecord eid msg ts lvl logger)
