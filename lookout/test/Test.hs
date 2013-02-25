@@ -1,6 +1,7 @@
 import Test.Hspec
 import Control.Exception (evaluate)
 
+import System.Log.Lookout (record)
 import System.Log.Lookout.Types as LT
 
 main :: IO ()

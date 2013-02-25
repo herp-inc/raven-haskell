@@ -1,7 +1,7 @@
 {-# LANGUAGE ViewPatterns #-}
 module System.Log.Lookout.Types
     ( SentrySettings(..), fromDSN, endpointURL
-    , SentryLevel(..), SentryRecord(..), newRecord, record
+    , SentryLevel(..), SentryRecord(..), newRecord
     ) where
 
 -- * Service settings
@@ -78,13 +78,3 @@ newRecord eid m t lev logger =
     SentryRecord
         eid m t lev logger
         Nothing Nothing [] Nothing [] [] []
-
-record :: String                         -- ^ Logger name.
-       -> SentryLevel                    -- ^ Level
-       -> String                         -- ^ Message
-       -> (SentryRecord -> SentryRecord) -- ^ Additional options
-       -> IO SentryRecord
-record logger lvl msg upd = do
-    eid <- return "0123456789abcdef0123456789abcdef"
-    ts <- return "YYYY-mm-dd HH:MM:SS.ns"
-    return $! upd (newRecord eid msg ts lvl logger)
