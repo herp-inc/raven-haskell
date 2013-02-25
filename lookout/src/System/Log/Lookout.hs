@@ -19,7 +19,7 @@ record :: String                         -- ^ Logger name.
        -> (SentryRecord -> SentryRecord) -- ^ Additional options
        -> IO SentryRecord
 record logger lvl msg upd = do
-    eid <- show `fmap` (randomIO :: IO UUID)
+    eid <- (filter (/= '-') . show) `fmap` (randomIO :: IO UUID)
     ts <- formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S%Q" `fmap` getCurrentTime
     return $! upd (newRecord eid msg ts lvl logger)
 
