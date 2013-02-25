@@ -1,7 +1,10 @@
 import Test.Hspec
 import Control.Exception (evaluate)
 
-import System.Log.Lookout (record)
+import qualified Data.ByteString.Lazy.Char8 as LBS
+import qualified Data.HashMap.Strict as HM
+
+import System.Log.Lookout (record, recordLBS)
 import System.Log.Lookout.Types as LT
 
 main :: IO ()
@@ -25,14 +28,12 @@ main = hspec $ do
         newRecord "" "" "" Debug "" `shouldBe` emptyRecord
 
     it "generates record template" $ do
-        r <- record "test.logger" Debug "test record please ignore" $ \rec ->
-            rec { srEventId = ""
-                , srTimestamp = ""
-                }
-        r `shouldBe` emptyRecord { srMessage = "test record please ignore"
-                                 , srLevel = Debug
-                                 , srLogger = "test.logger"
-                                 }
+        r <- record "test.logger" Debug "test record please ignore" strip
+        r `shouldBe` testRecord
+
+    it "serializes as JSON" $ do
+        r <- record "test.logger" Debug "test record please ignore" strip
+        recordLBS r `shouldBe` testRecordLBS
 
 dsn = "http://public_key:secret_key@example.com/sentry/project-id"
 
@@ -43,6 +44,10 @@ ss = SentrySettings {
          sentryProjectId = "project-id"
      }
 
+strip rec = rec { srEventId = ""
+                , srTimestamp = ""
+                }
+
 emptyRecord = SentryRecord { srEventId    = ""
                               , srMessage    = ""
                               , srTimestamp  = ""
@@ -50,9 +55,16 @@ emptyRecord = SentryRecord { srEventId    = ""
                               , srLogger     = ""
                               , srPlatform   = Nothing
                               , srCulprit    = Nothing
-                              , srTags       = []
+                              , srTags       = HM.empty
                               , srServerName = Nothing
-                              , srModules    = []
-                              , srExtra      = []
-                              , srInterfaces = []
+                              , srModules    = HM.empty
+                              , srExtra      = HM.empty
+                              , srInterfaces = HM.empty
                               }
+
+testRecord = emptyRecord { srMessage = "test record please ignore"
+                         , srLevel = Debug
+                         , srLogger = "test.logger"
+                         }
+
+testRecordLBS = LBS.pack "{\"timestamp\":\"\",\"message\":\"test record please ignore\",\"event_id\":\"\",\"level\":\"debug\",\"logger\":\"test.logger\"}"

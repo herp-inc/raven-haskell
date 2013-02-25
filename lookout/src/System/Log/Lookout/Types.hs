@@ -1,8 +1,12 @@
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE OverloadedStrings, ViewPatterns #-}
 module System.Log.Lookout.Types
     ( SentrySettings(..), fromDSN, endpointURL
     , SentryLevel(..), SentryRecord(..), newRecord
     ) where
+
+import Data.Aeson (ToJSON(toJSON), object, (.=))
+import qualified Data.HashMap.Strict as HM
+import qualified Data.Text as T
 
 -- * Service settings
 
@@ -57,7 +61,15 @@ data SentryLevel = Fatal
                  | Custom String
                  deriving (Show, Read, Eq)
 
-type Assoc = [(String, String)]
+instance ToJSON SentryLevel where
+    toJSON Fatal = "fatal"
+    toJSON Error = "error"
+    toJSON Warning = "warning"
+    toJSON Info = "info"
+    toJSON Debug = "debug"
+    toJSON (Custom s) = toJSON s
+
+type Assoc = HM.HashMap String String
 
 data SentryRecord = SentryRecord { srEventId    :: !String
                                  , srMessage    :: !String
@@ -70,11 +82,29 @@ data SentryRecord = SentryRecord { srEventId    :: !String
                                  , srServerName :: Maybe String
                                  , srModules    :: !Assoc
                                  , srExtra      :: !Assoc
-                                 , srInterfaces :: [(String, Assoc)]
+                                 , srInterfaces :: HM.HashMap String Assoc
                                  } deriving (Show, Eq)
 
 newRecord :: String -> String -> String -> SentryLevel -> String -> SentryRecord
 newRecord eid m t lev logger =
     SentryRecord
         eid m t lev logger
-        Nothing Nothing [] Nothing [] [] []
+        Nothing Nothing HM.empty Nothing HM.empty HM.empty HM.empty
+
+instance ToJSON SentryRecord where
+    toJSON r = object . concat $
+        [ [ "event_id" .= srEventId r
+          , "message" .= srMessage r
+          , "timestamp" .= srTimestamp r
+          , "level" .= srLevel r
+          , "logger" .= srLogger r
+          ]
+        , maybe [] (\v -> ["platform" .= v]) $ srPlatform r
+        , maybe [] (\v -> ["culprit" .= v]) $ srCulprit r
+        , if HM.null (srTags r) then [] else ["tags" .= srTags r]
+        , maybe [] (\v -> ["server_name" .= v]) $ srServerName r
+        , if HM.null (srModules r) then [] else ["modules" .= srModules r]
+        , if HM.null (srExtra r) then [] else ["extra" .= srExtra r]
+        , if HM.null (srInterfaces r) then [] else [ T.pack iface .= stuff
+                                                   | (iface, stuff) <- HM.toList $ srInterfaces r]
+        ]

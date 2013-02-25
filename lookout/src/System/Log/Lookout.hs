@@ -1,6 +1,9 @@
 module System.Log.Lookout
-    ( record
+    ( record, recordLBS
     ) where
+
+import Data.Aeson (encode)
+import Data.ByteString.Lazy (ByteString)
 
 import Data.UUID (UUID)
 import System.Random (randomIO)
@@ -19,3 +22,6 @@ record logger lvl msg upd = do
     eid <- show `fmap` (randomIO :: IO UUID)
     ts <- formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S%Q" `fmap` getCurrentTime
     return $! upd (newRecord eid msg ts lvl logger)
+
+recordLBS :: SentryRecord -> ByteString
+recordLBS = encode
