@@ -1,0 +1,8 @@
+syntax: glob
+
+dist/*
+cabal-dev/*
+out/*
+
+lookout.sublime-workspace
+
