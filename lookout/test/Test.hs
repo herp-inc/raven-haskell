@@ -118,6 +118,17 @@ main = hspec $ do
   describe "Interfaces" $ do
     let make = record "test.logger" Debug "test record please ignore"
 
+    it "registers messages" $ do
+        r <- make $ message "My raw message with interpreted strings like %s" ["this"]
+
+        let ex = object [ "message" .= ("My raw message with interpreted strings like %s" :: String)
+                        , "params" .= ["this" :: String]
+                        ]
+        HM.lookup "sentry.interfaces.Message" (srInterfaces r) `shouldBe` Just ex
+
+        ok <- sendRecord (fromDSN "http://test:test@localhost:19876/lookout") r
+        ok `shouldBe` ()
+
     it "registers exceptions" $ do
         r <- make $ exception "Wattttt!" (Just "SyntaxError") (Just "__buitins__")
 
@@ -127,6 +138,9 @@ main = hspec $ do
                         ]
 
         HM.lookup "sentry.interfaces.Exception" (srInterfaces r) `shouldBe` Just ex
+
+        ok <- sendRecord (fromDSN "http://test:test@localhost:19876/lookout") r
+        ok `shouldBe` ()
 
 dsn = "http://public_key:secret_key@example.com/sentry/project-id"
 
