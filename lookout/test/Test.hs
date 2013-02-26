@@ -3,8 +3,9 @@ import Control.Exception (evaluate)
 
 import qualified Data.ByteString.Lazy.Char8 as LBS
 import qualified Data.HashMap.Strict as HM
+import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
 
-import System.Log.Lookout (record, recordLBS)
+import System.Log.Lookout
 import System.Log.Lookout.Types as LT
 import System.Log.Lookout.Transport.HttpConduit (sendRecord)
 
@@ -29,23 +30,31 @@ main = hspec $ do
         newRecord "" "" "" Debug "" `shouldBe` emptyRecord
 
     it "generates record template" $ do
-        r <- record "test.logger" Debug "test record please ignore" strip
+        r <- strip `fmap` test
         r `shouldBe` testRecord
 
     it "serializes as JSON" $ do
-        r <- record "test.logger" Debug "test record please ignore" strip
+        r <- strip `fmap` test
         recordLBS r `shouldBe` testRecordLBS
 
-  describe "Transport.HttpConduit" $ do
+  describe "Service" $ do
     it "ignores record when service is disabled" $ do
-        r <- record "test.logger" Debug "test record please ignore" id
-        ok <- sendRecord (fromDSN "") r
+        l <- disabledLookout
+        ok <- register l "test.logger" Debug "Fly me to /dev/null" id
         ok `shouldBe` ()
 
     it "sends a record" $ do
-        r <- record "test.logger" Debug "test record please ignore" id
-        ok <- sendRecord (fromDSN "http://test:test@localhost:19876/lookout") r
+        l <- initLookout "http://test:test@localhost:19876/lookout" id sendRecord errorFallback
+        ok <- register l "test.logger" Debug "Like a record, baby, right round." id
         ok `shouldBe` ()
+
+    it "uses a fallback" $ do
+        v <- newEmptyMVar
+        l <- initLookout "http://bad:boo@localhost:1/lookout" id sendRecord (\_ -> putMVar v True)
+        sent <- register l "test.logger" Debug "Ready or not, here i come!" id
+        sent `shouldBe` ()
+        fbUsed <- takeMVar v
+        fbUsed `shouldBe` True
 
 dsn = "http://public_key:secret_key@example.com/sentry/project-id"
 
@@ -59,6 +68,8 @@ ss = SentrySettings {
 strip rec = rec { srEventId = ""
                 , srTimestamp = ""
                 }
+
+test = record "test.logger" Debug "test record please ignore" id
 
 emptyRecord = SentryRecord { srEventId    = ""
                               , srMessage    = ""

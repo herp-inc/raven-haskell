@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings, ViewPatterns #-}
 module System.Log.Lookout.Types
     ( SentrySettings(..), fromDSN, endpointURL
+    , SentryService(..)
     , SentryLevel(..), SentryRecord(..), newRecord
     ) where
 
@@ -50,6 +51,14 @@ fromDSN dsn@(fst . break (== ':') -> proto)
 endpointURL :: SentrySettings -> Maybe String
 endpointURL SentryDisabled = Nothing
 endpointURL (SentrySettings uri _ _ pid) = Just $! concat [uri, "api/", pid, "/store/"]
+
+-- * Logging service
+
+data SentryService = SentryService { serviceSettings :: SentrySettings
+                                   , serviceDefaults :: (SentryRecord -> SentryRecord)
+                                   , serviceTransport :: (SentrySettings -> SentryRecord -> IO ())
+                                   , serviceFallback :: (SentryRecord -> IO ())
+                                   }
 
 -- * Log entry
 
