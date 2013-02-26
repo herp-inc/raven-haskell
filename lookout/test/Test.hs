@@ -9,7 +9,7 @@ import Data.Aeson (object, (.=))
 import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
 
 import System.Log.Lookout
-import System.Log.Lookout.Interfaces
+import qualified System.Log.Lookout.Interfaces as SI
 import System.Log.Lookout.Types as LT
 import System.Log.Lookout.Transport.Debug (dumpRecord, briefRecord, catchRecord)
 import System.Log.Lookout.Transport.HttpConduit (sendRecord)
@@ -122,7 +122,7 @@ main = hspec $ do
         ok `shouldBe` ()
 
     it "registers messages" $ do
-        r <- make $ message "My raw message with interpreted strings like %s" ["this"]
+        r <- make $ SI.message "My raw message with interpreted strings like %s" ["this"]
 
         let ex = object [ "message" .= ("My raw message with interpreted strings like %s" :: String)
                         , "params" .= ["this" :: String]
@@ -132,7 +132,7 @@ main = hspec $ do
         send r
 
     it "registers exceptions" $ do
-        r <- make $ exception "Wattttt!" (Just "SyntaxError") (Just "__buitins__")
+        r <- make $ SI.exception "Wattttt!" (Just "SyntaxError") (Just "__buitins__")
 
         let ex = object [ "type" .= ("SyntaxError" :: String)
                         , "value" .= ("Wattttt!"  :: String)
@@ -140,6 +140,28 @@ main = hspec $ do
                         ]
 
         HM.lookup "sentry.interfaces.Exception" (srInterfaces r) `shouldBe` Just ex
+
+        send r
+
+    it "registers HTTP queries" $ do
+        r <- make $ SI.http
+                      "http://example.com/fake/url"
+                      "POST"
+                      (SI.QueryArgs [("foo", "bar")])
+                      (Just "hello=world")
+                      (Just "foo=bar")
+                      [("Content-Type", "text/html")]
+                      [("REMOTE_ADDR", "127.1.0.1")]
+
+        let ex = object [ "url"          .= ("http://example.com/fake/url" :: String)
+                        , "method"       .= ("POST" :: String)
+                        , "data"         .= object [ "foo" .= ("bar" :: String) ]
+                        , "query_string" .= ("hello=world" :: String)
+                        , "cookies"      .= ("foo=bar" :: String)
+                        , "headers"      .= object [ "Content-Type" .= ("text/html" :: String) ]
+                        , "env"          .= object [ "REMOTE_ADDR"  .= ("127.1.0.1" :: String)]
+                        ]
+        HM.lookup "sentry.interfaces.Http" (srInterfaces r) `shouldBe` Just ex
 
         send r
 
