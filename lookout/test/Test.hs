@@ -1,8 +1,11 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 import Test.Hspec
 import Control.Exception (evaluate)
 
 import qualified Data.ByteString.Lazy.Char8 as LBS
 import qualified Data.HashMap.Strict as HM
+import Data.Aeson (object, (.=))
 import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
 
 import System.Log.Lookout
@@ -99,15 +102,6 @@ main = hspec $ do
         r <- make $ extra [("bru", "haha")]
         srExtra r `shouldBe` HM.fromList [("bru", "haha")]
 
-    it "registers exceptions" $ do
-        r <- make $ exception "SyntaxError" "Wattttt!" "__buitins__"
-
-        let ex = HM.fromList [ ("type", "SyntaxError")
-                             , ("value", "Wattttt!")
-                             , ("module", "__buitins__") ]
-
-        HM.lookup "sentry.interfaces.Exception" (srInterfaces r) `shouldBe` Just ex
-
     it "fills in service defaults" $ do
         v <- newEmptyMVar
         l <- initLookout
@@ -120,6 +114,21 @@ main = hspec $ do
         rec <- takeMVar v
         srTags rec `shouldBe` HM.fromList [("spam", "eggs"), ("test", "shmest")]
         srExtra rec `shouldBe` HM.fromList [("sausage", "salad")]
+
+  describe "Interfaces" $ do
+    let make = record "test.logger" Debug "test record please ignore"
+
+    it "registers exceptions" $ do
+        r <- make $ exception "SyntaxError" "Wattttt!" "__buitins__"
+
+        let ex = object [ "type" .= ("SyntaxError" :: String)
+                        , "value" .= ("Wattttt!"  :: String)
+                        , "module" .= ("__buitins__"  :: String)
+                        ]
+
+        HM.lookup "sentry.interfaces.Exception" (srInterfaces r) `shouldBe` Just ex
+
+
 
 dsn = "http://public_key:secret_key@example.com/sentry/project-id"
 

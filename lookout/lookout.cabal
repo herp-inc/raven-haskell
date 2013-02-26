@@ -37,4 +37,5 @@ test-suite test
     base,
     hspec,
     lookout,
-    bytestring, unordered-containers
+    bytestring, unordered-containers, aeson
+

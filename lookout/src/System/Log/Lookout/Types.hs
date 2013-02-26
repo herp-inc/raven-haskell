@@ -9,7 +9,7 @@ module System.Log.Lookout.Types
     , SentryLevel(..), SentryRecord(..), newRecord
     ) where
 
-import Data.Aeson (ToJSON(toJSON), object, (.=))
+import Data.Aeson (ToJSON(toJSON), Value, object, (.=))
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Text as T
 
@@ -102,7 +102,7 @@ data SentryRecord = SentryRecord { srEventId    :: !String
                                  , srServerName :: Maybe String
                                  , srModules    :: !Assoc
                                  , srExtra      :: !Assoc
-                                 , srInterfaces :: HM.HashMap String Assoc
+                                 , srInterfaces :: HM.HashMap String Value
                                  } deriving (Show, Eq)
 
 -- | Initialize a record with all required fields filled in.
