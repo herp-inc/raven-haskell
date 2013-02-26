@@ -1,4 +1,8 @@
 {-# LANGUAGE OverloadedStrings, ViewPatterns #-}
+
+-- | Internal representation of event record and related facilities.
+--   Keep this under a pillow when writing custom wrappers.
+
 module System.Log.Lookout.Types
     ( SentrySettings(..), fromDSN, endpointURL
     , SentryService(..)
@@ -11,6 +15,7 @@ import qualified Data.Text as T
 
 -- * Service settings
 
+-- | Sentry client settings parsed from a DSN.
 data SentrySettings = SentryDisabled
                     | SentrySettings { sentryURI        :: !String
                                      , sentryPublicKey  :: !String
@@ -19,7 +24,8 @@ data SentrySettings = SentryDisabled
                                      } deriving (Show, Read, Eq)
 
 -- | Transforms a service DSN into a settings. Format is:
---   '{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PATH}{PROJECT_ID}'
+--
+-- > {PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}{PATH}/{PROJECT_ID}
 fromDSN :: String -> SentrySettings
 fromDSN "" = SentryDisabled
 fromDSN dsn@(fst . break (== ':') -> proto)
@@ -48,12 +54,14 @@ fromDSN dsn@(fst . break (== ':') -> proto)
         verify (sentryProjectId -> "") = error "Empty project id"
         verify s = s
 
+-- | Assemble http endpoint URL from settings.
 endpointURL :: SentrySettings -> Maybe String
 endpointURL SentryDisabled = Nothing
 endpointURL (SentrySettings uri _ _ pid) = Just $! concat [uri, "api/", pid, "/store/"]
 
 -- * Logging service
 
+-- | Misc settings packaged for easier operations.
 data SentryService = SentryService { serviceSettings :: SentrySettings
                                    , serviceDefaults :: (SentryRecord -> SentryRecord)
                                    , serviceTransport :: (SentrySettings -> SentryRecord -> IO ())
@@ -62,6 +70,7 @@ data SentryService = SentryService { serviceSettings :: SentrySettings
 
 -- * Log entry
 
+-- | Sentry log levels. Custom levels should be configured in Sentry or sending messages will fail.
 data SentryLevel = Fatal
                  | Error
                  | Warning
@@ -80,6 +89,8 @@ instance ToJSON SentryLevel where
 
 type Assoc = HM.HashMap String String
 
+-- | Event packet to be sent. See detailed field descriptions in
+--   <http://sentry.readthedocs.org/en/latest/developer/client/index.html#building-the-json-packet>.
 data SentryRecord = SentryRecord { srEventId    :: !String
                                  , srMessage    :: !String
                                  , srTimestamp  :: !String
@@ -94,6 +105,7 @@ data SentryRecord = SentryRecord { srEventId    :: !String
                                  , srInterfaces :: HM.HashMap String Assoc
                                  } deriving (Show, Eq)
 
+-- | Initialize a record with all required fields filled in.
 newRecord :: String -> String -> String -> SentryLevel -> String -> SentryRecord
 newRecord eid m t lev logger =
     SentryRecord
