@@ -119,7 +119,7 @@ main = hspec $ do
     let make = record "test.logger" Debug "test record please ignore"
 
     it "registers exceptions" $ do
-        r <- make $ exception "SyntaxError" "Wattttt!" "__buitins__"
+        r <- make $ exception "Wattttt!" (Just "SyntaxError") (Just "__buitins__")
 
         let ex = object [ "type" .= ("SyntaxError" :: String)
                         , "value" .= ("Wattttt!"  :: String)
@@ -127,8 +127,6 @@ main = hspec $ do
                         ]
 
         HM.lookup "sentry.interfaces.Exception" (srInterfaces r) `shouldBe` Just ex
-
-
 
 dsn = "http://public_key:secret_key@example.com/sentry/project-id"
 

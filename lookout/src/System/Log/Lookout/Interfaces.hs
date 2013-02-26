@@ -4,20 +4,33 @@
 --   <http://sentry.readthedocs.org/en/latest/developer/interfaces/index.html#provided-interfaces>
 
 module System.Log.Lookout.Interfaces
-    ( exception
+    ( interface
+    , exception
     ) where
 
-import Data.Aeson (object, (.=))
+import Data.Aeson (ToJSON(toJSON))
 import qualified Data.HashMap.Strict as HM
 
 import System.Log.Lookout.Types
 
--- | Register exception type, value and module.
-exception :: String -> String -> String -> SentryRecord -> SentryRecord
-exception t v m rec =
-    rec { srInterfaces = HM.insert "sentry.interfaces.Exception" info $ srInterfaces rec }
+-- | Generic interface helper.
+interface :: (ToJSON v) => String -> v -> SentryRecord -> SentryRecord
+interface k v rec =
+    rec { srInterfaces = HM.insert k (toJSON v) $ srInterfaces rec }
+
+-- | 'sentry.interfaces.Exception':
+--   A standard exception with a mandatory value argument,
+--   and optional type and``module`` argument describing
+--   the exception class type and module namespace.
+exception :: String       -- ^ Value
+          -> Maybe String -- ^ Type
+          -> Maybe String -- ^ Module
+          -> SentryRecord -- ^ Record to update
+          -> SentryRecord
+exception v t m = interface "sentry.interfaces.Exception" info
     where
-        info = object [ "type" .= t
-                      , "value" .= v
-                      , "module" .= m
-                      ]
+        info :: HM.HashMap String String
+        info = HM.fromList . concat $ [ [ ("value", v) ]
+                                      , maybe [] (\s -> [ ("type", s) ]) t
+                                      , maybe [] (\s -> [ ("module", s) ]) m
+                                      ]
