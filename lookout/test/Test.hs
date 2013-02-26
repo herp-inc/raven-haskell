@@ -6,6 +6,7 @@ import qualified Data.HashMap.Strict as HM
 import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
 
 import System.Log.Lookout
+import System.Log.Lookout.Interfaces
 import System.Log.Lookout.Types as LT
 import System.Log.Lookout.Transport.Debug (dumpRecord, briefRecord, catchRecord)
 import System.Log.Lookout.Transport.HttpConduit (sendRecord)
@@ -97,6 +98,15 @@ main = hspec $ do
 
         r <- make $ extra [("bru", "haha")]
         srExtra r `shouldBe` HM.fromList [("bru", "haha")]
+
+    it "registers exceptions" $ do
+        r <- make $ exception "SyntaxError" "Wattttt!" "__buitins__"
+
+        let ex = HM.fromList [ ("type", "SyntaxError")
+                             , ("value", "Wattttt!")
+                             , ("module", "__buitins__") ]
+
+        HM.lookup "sentry.interfaces.Exception" (srInterfaces r) `shouldBe` Just ex
 
     it "fills in service defaults" $ do
         v <- newEmptyMVar

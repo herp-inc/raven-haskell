@@ -17,6 +17,7 @@ library
   ghc-options: -O2 -Wall
   exposed-modules:
     System.Log.Lookout
+    System.Log.Lookout.Interfaces
     System.Log.Lookout.Types
     System.Log.Lookout.Transport.Debug
     System.Log.Lookout.Transport.HttpConduit
