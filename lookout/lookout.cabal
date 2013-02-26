@@ -18,6 +18,7 @@ library
   exposed-modules:
     System.Log.Lookout
     System.Log.Lookout.Types
+    System.Log.Lookout.Transport.Debug
     System.Log.Lookout.Transport.HttpConduit
   -- other-modules:
   build-depends:

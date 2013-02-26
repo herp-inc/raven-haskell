@@ -7,6 +7,7 @@ import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
 
 import System.Log.Lookout
 import System.Log.Lookout.Types as LT
+import System.Log.Lookout.Transport.Debug (dumpRecord, briefRecord, catchRecord)
 import System.Log.Lookout.Transport.HttpConduit (sendRecord)
 
 main :: IO ()
@@ -43,18 +44,38 @@ main = hspec $ do
         ok <- register l "test.logger" Debug "Fly me to /dev/null" id
         ok `shouldBe` ()
 
+    it "uses a fallback" $ do
+        v <- newEmptyMVar
+        l <- initLookout "http://bad:boo@localhost:1/lookout" id undefined (\_ -> putMVar v True)
+        sent <- register l "test.logger" Debug "Ready or not, here i come!" id
+        sent `shouldBe` ()
+        fbUsed <- takeMVar v
+        fbUsed `shouldBe` True
+
+  describe "Transport: HttpConduit" $ do
     it "sends a record" $ do
         l <- initLookout "http://test:test@localhost:19876/lookout" id sendRecord errorFallback
         ok <- register l "test.logger" Debug "Like a record, baby, right round." id
         ok `shouldBe` ()
 
-    it "uses a fallback" $ do
+  describe "Transport: Debug" $ do
+    it "shows brief message" $ do
+        l <- initLookout "http://not:really@whatever.fake/project" id briefRecord errorFallback
+        ok <- register l "test.logger" Debug "Hi there!" id
+        ok `shouldBe` ()
+
+    it "dumps event record" $ do
+        l <- initLookout "http://not:really@whatever.fake/project" id dumpRecord errorFallback
+        ok <- register l "test.logger" Debug "Hi there!" id
+        ok `shouldBe` ()
+
+    it "catches record into MVar" $ do
         v <- newEmptyMVar
-        l <- initLookout "http://bad:boo@localhost:1/lookout" id sendRecord (\_ -> putMVar v True)
-        sent <- register l "test.logger" Debug "Ready or not, here i come!" id
-        sent `shouldBe` ()
-        fbUsed <- takeMVar v
-        fbUsed `shouldBe` True
+        l <- initLookout "http://not:really@whatever.fake/project" id (catchRecord v) errorFallback
+        ok <- register l "test.logger" Debug "Hi there!" id
+        ok `shouldBe` ()
+        rec <- takeMVar v
+        srMessage rec `shouldBe` "Hi there!"
 
 dsn = "http://public_key:secret_key@example.com/sentry/project-id"
 
