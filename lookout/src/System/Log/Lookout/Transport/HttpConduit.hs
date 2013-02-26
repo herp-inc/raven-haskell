@@ -1,3 +1,5 @@
+-- | HTTPS-capable transport using http-conduit.
+
 {-# LANGUAGE OverloadedStrings #-}
 module System.Log.Lookout.Transport.HttpConduit
     ( sendRecord
