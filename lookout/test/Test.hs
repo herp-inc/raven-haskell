@@ -145,7 +145,7 @@ main = hspec $ do
 
     it "registers HTTP queries" $ do
         r <- make $ SI.http
-                      "http://example.com/fake/url"
+                      "http://absolute.uri/foo"
                       "POST"
                       (SI.QueryArgs [("foo", "bar")])
                       (Just "hello=world")
@@ -153,7 +153,7 @@ main = hspec $ do
                       [("Content-Type", "text/html")]
                       [("REMOTE_ADDR", "127.1.0.1")]
 
-        let ex = object [ "url"          .= ("http://example.com/fake/url" :: String)
+        let ex = object [ "url"          .= ("http://absolute.uri/foo" :: String)
                         , "method"       .= ("POST" :: String)
                         , "data"         .= object [ "foo" .= ("bar" :: String) ]
                         , "query_string" .= ("hello=world" :: String)

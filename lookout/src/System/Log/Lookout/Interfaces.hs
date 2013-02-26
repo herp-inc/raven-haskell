@@ -68,7 +68,7 @@ data HttpArgs = EmptyArgs
 --
 -- > import System.Log.Lookout.Interfaces as SI
 -- > let upd = SI.http
--- >             "http://example.com/fake/url"
+-- >             "http://absolute.uri/foo"
 -- >             "POST"
 -- >             (SI.QueryArgs [("foo", "bar")])
 -- >             (Just "hello=world")
