@@ -77,6 +77,40 @@ main = hspec $ do
         rec <- takeMVar v
         srMessage rec `shouldBe` "Hi there!"
 
+  describe "Updaters" $ do
+    let make = record "test.logger" Debug "test record please ignore"
+
+    it "updates culprit" $ do
+       r <- make $ culprit "Test.main"
+       srCulprit r `shouldBe` Just "Test.main"
+
+    it "updates tags" $ do
+        r <- make $ tags []
+        srTags r `shouldBe` HM.empty
+
+        r <- make $ tags [("test", "shmest")]
+        srTags r `shouldBe` HM.fromList [("test", "shmest")]
+
+    it "updates extra" $ do
+        r <- make $ extra []
+        srExtra r `shouldBe` HM.empty
+
+        r <- make $ extra [("bru", "haha")]
+        srExtra r `shouldBe` HM.fromList [("bru", "haha")]
+
+    it "fills in service defaults" $ do
+        v <- newEmptyMVar
+        l <- initLookout
+                 "http://not:really@whatever.fake/project"
+                 ( tags [("spam", "eggs"), ("test", "")]
+                 . extra [("sausage", "salad")] )
+                 (catchRecord v)
+                 errorFallback
+        r <- register l "test.logger" Debug "test record please ignore" $ tags [("test", "shmest")]
+        rec <- takeMVar v
+        srTags rec `shouldBe` HM.fromList [("spam", "eggs"), ("test", "shmest")]
+        srExtra rec `shouldBe` HM.fromList [("sausage", "salad")]
+
 dsn = "http://public_key:secret_key@example.com/sentry/project-id"
 
 ss = SentrySettings {

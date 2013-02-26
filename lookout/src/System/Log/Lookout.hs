@@ -30,6 +30,17 @@
 --
 -- > let debug msg = forkIO $ register l "my.logger.name" Debug msg (culprit . extra)
 -- > debug "Async stuff too."
+--
+--   There are some little helpers to compose your own updaters.
+--   You can use them both in 'initLookout' and 'register'.
+--
+-- > l <- initLookout dsn ( tags [ ("spam", "sausage"
+-- >                             , ("eggs", "bacon") ]
+-- >                      . extra [ ("more", "stuff") ]
+-- >                      )
+-- >                  sendRecord stderrFallback
+-- >
+-- > register l "test.helpers" Info "yup, i'm here." $ culprit "java.lang.NotReally"
 
 module System.Log.Lookout
     ( -- * Event service
@@ -37,6 +48,8 @@ module System.Log.Lookout
     , register
       -- * Fallback handlers
     , stderrFallback, errorFallback, silentFallback
+      -- * Record updaters
+    , culprit, tags, extra
       -- * Lower level helpers
     , record, recordLBS
     ) where
@@ -51,6 +64,7 @@ import Data.Time.Format (formatTime)
 import System.Locale (defaultTimeLocale)
 import System.IO (stderr, hPutStrLn)
 import qualified Control.Exception as E
+import qualified Data.HashMap.Strict as HM
 
 import System.Log.Lookout.Types
 
@@ -120,3 +134,15 @@ record logger lvl msg upd = do
 -- | JSON-encode record data.
 recordLBS :: SentryRecord -> ByteString
 recordLBS = encode
+
+-- | Set culprit field.
+culprit :: String -> SentryRecord -> SentryRecord
+culprit c r = r { srCulprit = Just c }
+
+-- | Add record tags.
+tags :: [(String, String)] -> SentryRecord -> SentryRecord
+tags ts r = r { srTags = HM.fromList ts `HM.union` srTags r }
+
+-- | Add record extra information.
+extra :: [(String, String)] -> SentryRecord -> SentryRecord
+extra ts r =  r { srExtra = HM.fromList ts `HM.union` srExtra r }
