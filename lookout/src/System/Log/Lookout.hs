@@ -1,8 +1,44 @@
+-- | Lookout is a client for Sentry event server (<https://www.getsentry.com/>).
+--
+--   Start by initializing the lookout 'Service':
+--
+-- > l <- initLookout
+-- >          "https://pub:priv@sentry.hostname.tld:8443/sentry/example_project"
+-- >          id
+-- >          sendRecord
+-- >          stderrFallback
+--
+--   Send events using 'register' function:
+--
+-- > register l "my.logger.name" Debug "Hi there!" id
+--
+--   Tags and stuff can be added using register update functions.
+--
+-- > import Data.HashMap.Strict as HM
+-- > let tags r = r { srTags = HM.insert "spam" "sausage"
+-- >                         . HM.insert "eggs" "bacon"
+-- >                         . srTags r }
+-- > lt <- initLookout dsn tags sendRecord stderrFallback
+-- >
+-- > let culprit r = r { srCulprit = "my.module.function.name" }
+-- > register lt "test.culprit" Error "It's a trap!" culprit
+-- > let extra r = r { srExtra = HM.insert "fnord" "42" $ srExtra r }
+-- > register lt "test.extra" Info "Test with tags and extra, please ignore."
+--
+--   The core package provides only general interface for sending events which
+--   could be wrapped to adapt it to your needs.
+--
+-- > let debug msg = forkIO $ register l "my.logger.name" Debug msg (culprit . extra)
+-- > debug "Async stuff too."
+
 module System.Log.Lookout
-    ( record, recordLBS
-    , stderrFallback, errorFallback, silentFallback
-    , initLookout, disabledLookout
+    ( -- * Event service
+      initLookout, disabledLookout
     , register
+      -- * Fallback handlers
+    , stderrFallback, errorFallback, silentFallback
+      -- * Lower level helpers
+    , record, recordLBS
     ) where
 
 import Data.Aeson (encode)
@@ -18,6 +54,7 @@ import qualified Control.Exception as E
 
 import System.Log.Lookout.Types
 
+-- | Record an event using logging service.
 record :: String                         -- ^ Logger name.
        -> SentryLevel                    -- ^ Level
        -> String                         -- ^ Message
@@ -28,9 +65,11 @@ record logger lvl msg upd = do
     ts <- formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S%Q" `fmap` getCurrentTime
     return $! upd (newRecord eid msg ts lvl logger)
 
+-- | JSON-encode record data.
 recordLBS :: SentryRecord -> ByteString
 recordLBS = encode
 
+-- | Show basic message on stderr.
 stderrFallback :: SentryRecord -> IO ()
 stderrFallback rec =
     hPutStrLn stderr $ concat
@@ -40,20 +79,20 @@ stderrFallback rec =
         , srMessage rec
         ]
 
+-- | Crash and burn with record data.
 errorFallback :: SentryRecord -> IO ()
 errorFallback rec = error $ "Error sending record: " ++ show rec
 
+-- | Ignore recording errors.
 silentFallback :: SentryRecord -> IO ()
 silentFallback _ = return ()
 
-disabledLookout :: IO SentryService
-disabledLookout = initLookout "" id undefined undefined
-
-initLookout :: String
-            -> (SentryRecord -> SentryRecord)
-            -> (SentrySettings -> SentryRecord -> IO ())
-            -> (SentryRecord -> IO ())
-            -> IO SentryService
+-- | Initialize event service.
+initLookout :: String                                    -- ^ Sentry DSN
+            -> (SentryRecord -> SentryRecord)            -- ^ Default fields updater. Use 'id' if not needed.
+            -> (SentrySettings -> SentryRecord -> IO ()) -- ^ Event transport from Looklout.Transport.*
+            -> (SentryRecord -> IO ())                   -- ^ Fallback handler.
+            -> IO SentryService                          -- ^ Event service to use in 'register'.
 initLookout dsn d t fb = return
     SentryService { serviceSettings = fromDSN dsn
                   , serviceDefaults = d
@@ -61,6 +100,11 @@ initLookout dsn d t fb = return
                   , serviceFallback = fb
                   }
 
+-- | Disabled service that ignores incoming events.
+disabledLookout :: IO SentryService
+disabledLookout = initLookout "" id undefined undefined
+
+-- | Ask service to store an event.
 register :: SentryService
          -> String
          -> SentryLevel
