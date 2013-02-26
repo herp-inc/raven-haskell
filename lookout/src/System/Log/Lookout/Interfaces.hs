@@ -5,7 +5,7 @@
 
 module System.Log.Lookout.Interfaces
     ( interface
-    , message, messageS
+    , message
     , exception
     ) where
 
@@ -31,13 +31,6 @@ message msg args = interface "sentry.interfaces.Message" info
         info = object [ "message" .= take 1000 msg
                       , "params" .= args
                       ]
-
--- | 'sentry.interfaces.Message'-variation with all-strings arguments.
-messageS :: String       -- ^ Message text (no more than 1000 characters in length).
-         -> [String]     -- ^ Formatting arguments
-         -> SentryRecord -- ^ Record to update
-         -> SentryRecord
-messageS msg args = message msg (map toJSON args)
 
 -- | 'sentry.interfaces.Exception':
 --   A standard exception with a mandatory value argument,
