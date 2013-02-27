@@ -179,6 +179,16 @@ main = hspec $ do
 
         send r
 
+    it "registers SQL queries" $ do
+        r <- make $ SI.query (Just "postgresql-simple") "SELECT 1"
+
+        let ex = object [ "query"  .= ("SELECT 1" :: String)
+                        , "engine" .= ("postgresql-simple" :: String)
+                        ]
+        HM.lookup "sentry.interfaces.Query" (srInterfaces r) `shouldBe` Just ex
+
+        send r
+
 dsn = "http://public_key:secret_key@example.com/sentry/project-id"
 
 ss = SentrySettings {

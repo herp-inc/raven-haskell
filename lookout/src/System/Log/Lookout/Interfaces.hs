@@ -13,6 +13,8 @@ module System.Log.Lookout.Interfaces
     , http, HttpArgs(..)
       -- ** User
     , user
+      -- ** Query
+    , query
       -- * Generic interface helpers
     , interface
     , fields, (.=:), fromMaybe, fromAssoc
@@ -113,6 +115,18 @@ user :: String             -- ^ User's unique identifier
 user uid kwargs = interface "sentry.interfaces.User" info
     where
         info = HM.fromList $ ("id", uid) : kwargs
+
+-- | 'sentry.interfaces.Query':
+--   A SQL query with an optional string describing the SQL driver, engine.
+query :: Maybe String -- ^ SQL Driver
+      -> String       -- ^ Query
+      -> SentryRecord -- ^ Record to update
+      -> SentryRecord
+query d q = interface "sentry.interfaces.Query" info
+    where
+        info = fields [ "query" .=: q
+                      , fromMaybe "engine" d
+                      ]
 
 -- | Generic interface helper.
 interface :: (ToJSON v) => String -> v -> SentryRecord -> SentryRecord
