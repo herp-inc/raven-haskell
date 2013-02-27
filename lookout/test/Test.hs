@@ -7,6 +7,7 @@ import qualified Data.ByteString.Lazy.Char8 as LBS
 import qualified Data.HashMap.Strict as HM
 import Data.Aeson (object, (.=))
 import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
+import Data.List (sort)
 
 import System.Log.Lookout
 import qualified System.Log.Lookout.Interfaces as SI
@@ -187,6 +188,25 @@ main = hspec $ do
                         ]
         HM.lookup "sentry.interfaces.Query" (srInterfaces r) `shouldBe` Just ex
 
+        send r
+
+    it "combines interface parts" $ do
+        r <- make $ SI.exception "Please ignore" (Just "TestException") (Just "Test")
+                  . SI.http
+                      "http://localhost:8000/im/trapped/at/request/factory"
+                      "GET"
+                      SI.EmptyArgs
+                      (Just "help")
+                      Nothing
+                      []
+                      []
+                  . SI.user "1001" [ ("username", "test"), ("email", "test@localhost")]
+                  . SI.query Nothing "SELECT title, body FROM pages WHERE url=?"
+        sort (HM.keys $ srInterfaces r) `shouldBe` [ "sentry.interfaces.Exception"
+                                                   , "sentry.interfaces.Http"
+                                                   , "sentry.interfaces.Query"
+                                                   , "sentry.interfaces.User"
+                                                   ]
         send r
 
 dsn = "http://public_key:secret_key@example.com/sentry/project-id"
