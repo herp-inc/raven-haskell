@@ -1,8 +1,8 @@
-name:                lookout
+name:                raven-haskell
 version:             0.1.0.0
 synopsis:            Haskell client for Sentry logging service.
 -- description:         
-homepage:            https://bitbucket.org/dpwiz/lookout
+homepage:            https://bitbucket.org/dpwiz/raven-haskell
 license:             MIT
 license-file:        LICENSE
 author:              Alexander Bondarenko
@@ -16,11 +16,11 @@ library
   hs-source-dirs: src
   ghc-options: -O2 -Wall
   exposed-modules:
-    System.Log.Lookout
-    System.Log.Lookout.Interfaces
-    System.Log.Lookout.Types
-    System.Log.Lookout.Transport.Debug
-    System.Log.Lookout.Transport.HttpConduit
+    System.Log.Raven
+    System.Log.Raven.Interfaces
+    System.Log.Raven.Types
+    System.Log.Raven.Transport.Debug
+    System.Log.Raven.Transport.HttpConduit
   -- other-modules:
   build-depends:
     base ==4.*,
@@ -36,6 +36,5 @@ test-suite test
   build-depends:
     base,
     hspec,
-    lookout,
+    raven-haskell,
     bytestring, unordered-containers, aeson
-

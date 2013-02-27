@@ -9,11 +9,11 @@ import Data.Aeson (object, (.=))
 import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
 import Data.List (sort)
 
-import System.Log.Lookout
-import qualified System.Log.Lookout.Interfaces as SI
-import System.Log.Lookout.Types as LT
-import System.Log.Lookout.Transport.Debug (dumpRecord, briefRecord, catchRecord)
-import System.Log.Lookout.Transport.HttpConduit (sendRecord)
+import System.Log.Raven
+import qualified System.Log.Raven.Interfaces as SI
+import System.Log.Raven.Types as LT
+import System.Log.Raven.Transport.Debug (dumpRecord, briefRecord, catchRecord)
+import System.Log.Raven.Transport.HttpConduit (sendRecord)
 
 main :: IO ()
 main = hspec $ do
@@ -45,13 +45,13 @@ main = hspec $ do
 
   describe "Service" $ do
     it "ignores record when service is disabled" $ do
-        l <- disabledLookout
+        l <- disabledRaven
         ok <- register l "test.logger" Debug "Fly me to /dev/null" id
         ok `shouldBe` ()
 
     it "uses a fallback" $ do
         v <- newEmptyMVar
-        l <- initLookout "http://bad:boo@localhost:1/lookout" id undefined (\_ -> putMVar v True)
+        l <- initRaven "http://bad:boo@localhost:1/raven" id undefined (\_ -> putMVar v True)
         sent <- register l "test.logger" Debug "Ready or not, here i come!" id
         sent `shouldBe` ()
         fbUsed <- takeMVar v
@@ -59,24 +59,24 @@ main = hspec $ do
 
   describe "Transport: HttpConduit" $ do
     it "sends a record" $ do
-        l <- initLookout "http://test:test@localhost:19876/lookout" id sendRecord errorFallback
+        l <- initRaven "http://test:test@localhost:19876/raven" id sendRecord errorFallback
         ok <- register l "test.logger" Debug "Like a record, baby, right round." id
         ok `shouldBe` ()
 
   describe "Transport: Debug" $ do
     it "shows brief message" $ do
-        l <- initLookout "http://not:really@whatever.fake/project" id briefRecord errorFallback
+        l <- initRaven "http://not:really@whatever.fake/project" id briefRecord errorFallback
         ok <- register l "test.logger" Debug "Hi there!" id
         ok `shouldBe` ()
 
     it "dumps event record" $ do
-        l <- initLookout "http://not:really@whatever.fake/project" id dumpRecord errorFallback
+        l <- initRaven "http://not:really@whatever.fake/project" id dumpRecord errorFallback
         ok <- register l "test.logger" Debug "Hi there!" id
         ok `shouldBe` ()
 
     it "catches record into MVar" $ do
         v <- newEmptyMVar
-        l <- initLookout "http://not:really@whatever.fake/project" id (catchRecord v) errorFallback
+        l <- initRaven "http://not:really@whatever.fake/project" id (catchRecord v) errorFallback
         ok <- register l "test.logger" Debug "Hi there!" id
         ok `shouldBe` ()
         rec <- takeMVar v
@@ -105,7 +105,7 @@ main = hspec $ do
 
     it "fills in service defaults" $ do
         v <- newEmptyMVar
-        l <- initLookout
+        l <- initRaven
                  "http://not:really@whatever.fake/project"
                  ( tags [("spam", "eggs"), ("test", "")]
                  . extra [("sausage", "salad")] )
@@ -119,7 +119,7 @@ main = hspec $ do
   describe "Interfaces" $ do
     let make = record "test.logger" Debug "test record please ignore"
     let send r = do
-        ok <- sendRecord (fromDSN "http://test:test@localhost:19876/lookout") r
+        ok <- sendRecord (fromDSN "http://test:test@localhost:19876/raven") r
         ok `shouldBe` ()
 
     it "registers messages" $ do

@@ -4,5 +4,5 @@ dist/*
 cabal-dev/*
 out/*
 
-lookout.sublime-workspace
+raven-haskell.sublime-workspace
 

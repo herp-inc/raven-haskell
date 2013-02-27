@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Structured data interfaces. Core Sentry interfaces:
+-- | Structured data interfaces from Sentry core:
 --   <http://sentry.readthedocs.org/en/latest/developer/interfaces/index.html#provided-interfaces>
 
-module System.Log.Lookout.Interfaces
-    ( -- * Sentry core interfaces
+module System.Log.Raven.Interfaces
+    ( -- * Core sentry interfaces
       -- ** Message
       message
       -- ** Exception
@@ -23,7 +23,7 @@ module System.Log.Lookout.Interfaces
 import Data.Aeson (ToJSON(toJSON), Value, object, (.=))
 import qualified Data.HashMap.Strict as HM
 
-import System.Log.Lookout.Types
+import System.Log.Raven.Types
 
 -- | 'sentry.interfaces.Message':
 --   A standard message consisting of a message arg, and an optional params
@@ -70,7 +70,7 @@ data HttpArgs = EmptyArgs
 --   (not the query string). It can either be a dictionary
 --   (for standard HTTP requests) or a raw request body.
 --
--- > import System.Log.Lookout.Interfaces as SI
+-- > import System.Log.RavenInterfaces as SI
 -- > let upd = SI.http
 -- >             "http://absolute.uri/foo"
 -- >             "POST"

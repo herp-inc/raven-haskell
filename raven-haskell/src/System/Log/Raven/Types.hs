@@ -3,7 +3,7 @@
 -- | Internal representation of event record and related facilities.
 --   Keep this under a pillow when writing custom wrappers.
 
-module System.Log.Lookout.Types
+module System.Log.Raven.Types
     ( SentrySettings(..), fromDSN, endpointURL
     , SentryService(..)
     , SentryLevel(..), SentryRecord(..), newRecord

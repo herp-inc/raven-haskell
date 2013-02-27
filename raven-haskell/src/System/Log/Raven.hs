@@ -1,8 +1,8 @@
--- | Lookout is a client for Sentry event server (<https://www.getsentry.com/>).
+-- | Raven is a client for Sentry event server (<https://www.getsentry.com/>).
 --
---   Start by initializing the lookout 'Service':
+--   Start by initializing the raven 'Service':
 --
--- > l <- initLookout
+-- > l <- initRaven
 -- >          "https://pub:priv@sentry.hostname.tld:8443/sentry/example_project"
 -- >          id
 -- >          sendRecord
@@ -18,7 +18,7 @@
 -- > let tags r = r { srTags = HM.insert "spam" "sausage"
 -- >                         . HM.insert "eggs" "bacon"
 -- >                         . srTags r }
--- > lt <- initLookout dsn tags sendRecord stderrFallback
+-- > lt <- initRaven dsn tags sendRecord stderrFallback
 -- >
 -- > let culprit r = r { srCulprit = "my.module.function.name" }
 -- > register lt "test.culprit" Error "It's a trap!" culprit
@@ -32,19 +32,19 @@
 -- > debug "Async stuff too."
 --
 --   There are some little helpers to compose your own updaters.
---   You can use them both in 'initLookout' and 'register'.
+--   You can use them both in 'initRaven' and 'register'.
 --
--- > l <- initLookout dsn ( tags [ ("spam", "sausage"
--- >                             , ("eggs", "bacon") ]
--- >                      . extra [ ("more", "stuff") ]
--- >                      )
--- >                  sendRecord stderrFallback
+-- > l <- initRaven dsn ( tags [ ("spam", "sausage"
+-- >                           , ("eggs", "bacon") ]
+-- >                    . extra [ ("more", "stuff") ]
+-- >                    )
+-- >                    sendRecord stderrFallback
 -- >
 -- > register l "test.helpers" Info "yup, i'm here." $ culprit "java.lang.NotReally"
 
-module System.Log.Lookout
+module System.Log.Raven
     ( -- * Event service
-      initLookout, disabledLookout
+      initRaven, disabledRaven
     , register
       -- * Fallback handlers
     , stderrFallback, errorFallback, silentFallback
@@ -66,15 +66,15 @@ import System.IO (stderr, hPutStrLn)
 import qualified Control.Exception as E
 import qualified Data.HashMap.Strict as HM
 
-import System.Log.Lookout.Types
+import System.Log.Raven.Types
 
 -- | Initialize event service.
-initLookout :: String                                    -- ^ Sentry DSN
-            -> (SentryRecord -> SentryRecord)            -- ^ Default fields updater. Use 'id' if not needed.
-            -> (SentrySettings -> SentryRecord -> IO ()) -- ^ Event transport from Looklout.Transport.*
-            -> (SentryRecord -> IO ())                   -- ^ Fallback handler.
-            -> IO SentryService                          -- ^ Event service to use in 'register'.
-initLookout dsn d t fb = return
+initRaven :: String                                    -- ^ Sentry DSN
+          -> (SentryRecord -> SentryRecord)            -- ^ Default fields updater. Use 'id' if not needed.
+          -> (SentrySettings -> SentryRecord -> IO ()) -- ^ Event transport from Raven.Transport.*
+          -> (SentryRecord -> IO ())                   -- ^ Fallback handler.
+          -> IO SentryService                          -- ^ Event service to use in 'register'.
+initRaven dsn d t fb = return
     SentryService { serviceSettings = fromDSN dsn
                   , serviceDefaults = d
                   , serviceTransport = t
@@ -82,11 +82,11 @@ initLookout dsn d t fb = return
                   }
 
 -- | Disabled service that ignores incoming events.
-disabledLookout :: IO SentryService
-disabledLookout = initLookout "" id undefined undefined
+disabledRaven :: IO SentryService
+disabledRaven = initRaven "" id undefined undefined
 
 -- | Ask service to store an event.
-register :: SentryService                  -- ^ Configured lookout service.
+register :: SentryService                  -- ^ Configured raven service.
          -> String                         -- ^ Logger name.
          -> SentryLevel                    -- ^ Sentry event level.
          -> String                         -- ^ Message.

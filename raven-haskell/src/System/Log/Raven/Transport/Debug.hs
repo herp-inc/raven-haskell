@@ -1,12 +1,12 @@
 -- | Dummy «transports» for debugging purposes.
 
-module System.Log.Lookout.Transport.Debug
+module System.Log.Raven.Transport.Debug
     ( dumpRecord, briefRecord, catchRecord
     ) where
 
 import Control.Concurrent.MVar (MVar, putMVar)
 
-import System.Log.Lookout.Types
+import System.Log.Raven.Types
 
 -- | Dump all glory details.
 dumpRecord :: SentrySettings -> SentryRecord -> IO ()
