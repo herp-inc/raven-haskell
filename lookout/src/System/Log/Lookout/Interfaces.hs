@@ -11,6 +11,8 @@ module System.Log.Lookout.Interfaces
     , exception
       -- ** Http
     , http, HttpArgs(..)
+      -- ** User
+    , user
       -- * Generic interface helpers
     , interface
     , fields, (.=:), fromMaybe, fromAssoc
@@ -98,6 +100,19 @@ http url m args q c hs env = interface "sentry.interfaces.Http" info
         fromHttpArgs EmptyArgs = []
         fromHttpArgs (RawArgs s) = "data" .=: s
         fromHttpArgs (QueryArgs kvs) = "data" .=: HM.fromList kvs
+
+-- | 'sentry.interfaces.User':
+--   An interface which describes the authenticated User for a request.
+--
+-- > let upd = SI.user "unique_id" [ ("username", "my_user")
+-- >                               , ("email", "foo@example.com") ]
+user :: String             -- ^ User's unique identifier
+     -> [(String, String)] -- ^ Optional user data
+     -> SentryRecord       -- ^ Record to update
+     -> SentryRecord
+user uid kwargs = interface "sentry.interfaces.User" info
+    where
+        info = HM.fromList $ ("id", uid) : kwargs
 
 -- | Generic interface helper.
 interface :: (ToJSON v) => String -> v -> SentryRecord -> SentryRecord

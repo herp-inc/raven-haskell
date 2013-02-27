@@ -165,6 +165,20 @@ main = hspec $ do
 
         send r
 
+    it "registers User data" $ do
+        r <- make $ SI.user "0" [ ("username", "root")
+                                , ("email", "root@localhost")
+                                , ("is_superuser", "True") -- wart
+                                ]
+        let ex = object [ "id"           .= ("0" :: String)
+                        , "username"     .= ("root" :: String)
+                        , "email"        .= ("root@localhost" :: String)
+                        , "is_superuser" .= ("True" :: String)
+                        ]
+        HM.lookup "sentry.interfaces.User" (srInterfaces r) `shouldBe` Just ex
+
+        send r
+
 dsn = "http://public_key:secret_key@example.com/sentry/project-id"
 
 ss = SentrySettings {
