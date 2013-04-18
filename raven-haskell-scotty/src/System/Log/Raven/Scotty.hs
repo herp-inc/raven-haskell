@@ -1,6 +1,27 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
--- | This package contains utilities to log errors in Scotty actions using raven-haskell.
+-- | Utilities to log errors in Scotty actions using raven-haskell.
+-- 
+-- > import Web.Scotty
+-- >
+-- > import System.Log.Raven
+-- > import System.Log.Raven.Transport.HttpConduit (sendRecord)
+-- > import System.Log.Raven.Scotty
+-- >
+-- > main = do
+-- >     raven <- initRaven "https://…" id sendRecord stderrFallback
+-- >     let hereBeDragons = guardIO raven "my.logger" (Just "DragonsError") (Just "My.Inner.Dragons")
+-- >
+-- >     scotty 8000 $ do
+-- >         post "/some/action/" $ do
+-- >             arg1 <- param "arg1"
+-- >             arg2 <- param "arg2"
+-- >             ds <- hereBeDragons $ dragonsIO arg1 arg2
+-- >             if null ds
+-- >                 then text "no dragons"
+-- >                 else do
+-- >                     let msg = "dragons! run!"
+-- >                     scottyHttpInterface >>= logError raven "Main.main" msg
 
 module System.Log.Raven.Scotty
     ( guardIO
@@ -25,16 +46,6 @@ import Control.Exception (try, throw, SomeException)
 
 -- | A liftIO alternative that logs unhandled exceptions.
 --   The function itself is verbose in arguments and designed to be curried and reused.
---
--- > main = do
--- >     raven <- initRaven …
--- >     let hereBeDragons = guardIO raven "my.logger" (Just "DragonsError") (Just "My.Inner.Dragons")
--- >
--- >     scotty 8000 $ do
--- >         post "/some/action/" $ do
--- >             arg1 <- param "arg1"
--- >             arg2 <- param "arg2"
--- >             hereBeDragons $ dragonsIO arg1 arg2
 guardIO :: SentryService -- ^ Configured Sentry service.
         -> String        -- ^ Logger name.
         -> Maybe String  -- ^ Exception type name.
@@ -80,5 +91,4 @@ scottyHttpInterface = do
                             | (k, v) <- ps
                             ]
 
-    liftIO $ print (url, method, args, qs, hs)
     return $ SI.http url method args qs Nothing hs []
