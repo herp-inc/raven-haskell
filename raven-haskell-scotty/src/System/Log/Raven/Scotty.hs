@@ -83,7 +83,12 @@ scottyHttpInterface = do
              | (h, v) <- requestHeaders r
              ]
 
+#if MIN_VERSION_scotty(0,5,0)
+    host <- maybe (TL.pack "") id `fmap` reqHeader (TL.pack "Host")
+#else
     host <- reqHeader (TL.pack "Host")
+#endif
+
     let url = "http://" ++ TL.unpack host ++ BS.unpack (rawPathInfo r)
 
     ps <- params
