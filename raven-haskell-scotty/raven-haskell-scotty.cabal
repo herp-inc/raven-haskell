@@ -1,5 +1,5 @@
 name:                raven-haskell-scotty
-version:             0.1.0.2
+version:             0.1.0.3
 synopsis:            Sentry http interface for Scotty web server.
 description:         Utilities to log errors in Scotty actions using raven-haskell.
 homepage:            http://bitbucket.org/dpwiz/raven-haskell

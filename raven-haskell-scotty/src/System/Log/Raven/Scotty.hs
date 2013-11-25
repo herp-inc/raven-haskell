@@ -58,7 +58,7 @@ guardIO raven logger typename modname io = do
         Right r -> return r
         Left (e :: SomeException) -> do
             let exc = SI.exception (show e) typename modname
-            logError raven logger (show e) exc
+            logError raven logger (takeWhile (/= ' ') $ show e) exc
             liftIO $ throw e
 
 -- | Log an error in an ActionM monad, collecting request data.
