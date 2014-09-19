@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Utilities to log errors in Scotty actions using raven-haskell.
@@ -29,7 +30,7 @@ module System.Log.Raven.Scotty
     , scottyHttpInterface
     ) where
 
-import Web.Scotty (ActionM, request, reqHeader, params)
+import Web.Scotty (ActionM, request, params)
 
 import System.Log.Raven as Raven
 import System.Log.Raven.Types as Raven
@@ -43,6 +44,13 @@ import qualified Data.CaseInsensitive as CI
 
 import Control.Monad.Trans (liftIO)
 import Control.Exception (try, throw, SomeException)
+
+#if MIN_VERSION_scotty(0,8,0)
+import Web.Scotty (header)
+#else
+import Web.Scotty (reqHeader)
+header = reqHeader
+#endif
 
 -- | A liftIO alternative that logs unhandled exceptions.
 --   The function itself is verbose in arguments and designed to be curried and reused.
@@ -84,7 +92,7 @@ scottyHttpInterface = do
              ]
 
 #if MIN_VERSION_scotty(0,5,0)
-    host <- maybe (TL.pack "") id `fmap` reqHeader (TL.pack "Host")
+    host <- maybe (TL.pack "") id `fmap` header (TL.pack "Host")
 #else
     host <- reqHeader (TL.pack "Host")
 #endif
