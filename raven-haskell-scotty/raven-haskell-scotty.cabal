@@ -19,7 +19,10 @@ library
   build-depends:
     base ==4.*,
     raven-haskell,
-    scotty, wai, case-insensitive,
-    bytestring, text,
-    mtl
+    bytestring,
+    case-insensitive,
+    mtl,
+    scotty,
+    text,
+    wai
   extensions: CPP

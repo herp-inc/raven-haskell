@@ -60,8 +60,7 @@ import Data.ByteString.Lazy (ByteString)
 import Data.UUID (UUID)
 import System.Random (randomIO)
 import Data.Time.Clock (getCurrentTime)
-import Data.Time.Format (formatTime)
-import System.Locale (defaultTimeLocale)
+import Data.Time.Format (formatTime, defaultTimeLocale)
 import System.IO (stderr, hPutStrLn)
 import qualified Control.Exception as E
 import qualified Data.HashMap.Strict as HM

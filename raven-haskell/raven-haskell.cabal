@@ -1,5 +1,5 @@
 name:                raven-haskell
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            Haskell client for Sentry logging service.
 -- description:         
 homepage:            https://bitbucket.org/dpwiz/raven-haskell
@@ -24,10 +24,15 @@ library
   -- other-modules:
   build-depends:
     base ==4.*,
-    random, uuid,
-    time, old-locale,
-    aeson, bytestring, text, unordered-containers,
-    http-conduit, network
+    aeson,
+    bytestring >= 0.10,
+    http-conduit,
+    network,
+    random >= 1.0,
+    text,
+    time >= 1.5.0.1,
+    unordered-containers,
+    uuid
 
 test-suite test
   type: exitcode-stdio-1.0
@@ -35,9 +40,11 @@ test-suite test
   hs-source-dirs: test
   build-depends:
     base,
+    aeson,
+    bytestring,
     hspec,
     raven-haskell,
-    bytestring, unordered-containers, aeson
+    unordered-containers
 
 source-repository head
   type:     git
