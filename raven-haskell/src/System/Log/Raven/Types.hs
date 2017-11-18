@@ -90,19 +90,21 @@ instance ToJSON SentryLevel where
 type Assoc = HM.HashMap String String
 
 -- | Event packet to be sent. See detailed field descriptions in
---   <http://sentry.readthedocs.org/en/latest/developer/client/index.html#building-the-json-packet>.
-data SentryRecord = SentryRecord { srEventId    :: !String
-                                 , srMessage    :: !String
-                                 , srTimestamp  :: !String
-                                 , srLevel      :: !SentryLevel
-                                 , srLogger     :: !String
-                                 , srPlatform   :: Maybe String
-                                 , srCulprit    :: Maybe String
-                                 , srTags       :: !Assoc
-                                 , srServerName :: Maybe String
-                                 , srModules    :: !Assoc
-                                 , srExtra      :: !Assoc
-                                 , srInterfaces :: HM.HashMap String Value
+--   <https://docs.sentry.io/clientdev/attributes/>
+data SentryRecord = SentryRecord { srEventId     :: !String
+                                 , srMessage     :: !String
+                                 , srTimestamp   :: !String
+                                 , srLevel       :: !SentryLevel
+                                 , srLogger      :: !String
+                                 , srPlatform    :: Maybe String
+                                 , srCulprit     :: Maybe String
+                                 , srTags        :: !Assoc
+                                 , srServerName  :: Maybe String
+                                 , srModules     :: !Assoc
+                                 , srExtra       :: !Assoc
+                                 , srInterfaces  :: HM.HashMap String Value
+                                 , srRelease     :: Maybe String
+                                 , srEnvironment :: Maybe String
                                  } deriving (Show, Eq)
 
 -- | Initialize a record with all required fields filled in.
@@ -110,7 +112,7 @@ newRecord :: String -> String -> String -> SentryLevel -> String -> SentryRecord
 newRecord eid m t lev logger =
     SentryRecord
         eid m t lev logger
-        Nothing Nothing HM.empty Nothing HM.empty HM.empty HM.empty
+        Nothing Nothing HM.empty Nothing HM.empty HM.empty HM.empty Nothing Nothing
 
 instance ToJSON SentryRecord where
     toJSON r = object . concat $
@@ -128,4 +130,6 @@ instance ToJSON SentryRecord where
         , if HM.null (srExtra r) then [] else ["extra" .= srExtra r]
         , if HM.null (srInterfaces r) then [] else [ T.pack iface .= stuff
                                                    | (iface, stuff) <- HM.toList $ srInterfaces r]
+        , maybe [] (\v -> ["release" .= v]) $ srRelease r
+        , maybe [] (\v -> ["environment" .= v]) $ srEnvironment r
         ]
