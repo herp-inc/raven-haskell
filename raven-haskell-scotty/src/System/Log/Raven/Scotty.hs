@@ -34,7 +34,6 @@ import Web.Scotty (ActionM, request, params)
 
 import System.Log.Raven as Raven
 import System.Log.Raven.Types as Raven
-import System.Log.Raven.Transport.HttpConduit (sendRecord)
 import qualified System.Log.Raven.Interfaces as SI
 import Network.Wai(Request(..))
 
