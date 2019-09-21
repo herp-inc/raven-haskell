@@ -50,7 +50,6 @@ fromDSN dsn@(fst . break (== ':') -> proto)
 
         verify (sentryURI -> "") = error "Empty URI"
         verify (sentryPublicKey -> "") = error "Empty public key"
-        verify (sentryPrivateKey -> "") = error "Empty private key"
         verify (sentryProjectId -> "") = error "Empty project id"
         verify s = s
 
