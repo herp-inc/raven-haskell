@@ -12,6 +12,7 @@ module System.Log.Raven.Types
 import Data.Aeson (ToJSON(toJSON), Value, object, (.=))
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Text as T
+import Data.Time.Clock (UTCTime)
 
 -- * Service settings
 
@@ -92,7 +93,7 @@ type Assoc = HM.HashMap String String
 --   <https://docs.sentry.io/clientdev/attributes/>
 data SentryRecord = SentryRecord { srEventId     :: !String
                                  , srMessage     :: !String
-                                 , srTimestamp   :: !String
+                                 , srTimestamp   :: !UTCTime
                                  , srLevel       :: !SentryLevel
                                  , srLogger      :: !String
                                  , srPlatform    :: Maybe String
@@ -107,7 +108,7 @@ data SentryRecord = SentryRecord { srEventId     :: !String
                                  } deriving (Show, Eq)
 
 -- | Initialize a record with all required fields filled in.
-newRecord :: String -> String -> String -> SentryLevel -> String -> SentryRecord
+newRecord :: String -> String -> UTCTime -> SentryLevel -> String -> SentryRecord
 newRecord eid m t lev logger =
     SentryRecord
         eid m t lev logger

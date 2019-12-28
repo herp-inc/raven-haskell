@@ -14,7 +14,7 @@ dumpRecord _ rec = print rec
 
 -- | Log-like output with very few data shown.
 briefRecord :: SentrySettings -> SentryRecord -> IO ()
-briefRecord _ rec = putStrLn $ concat [ srTimestamp rec, " "
+briefRecord _ rec = putStrLn $ concat [ show $ srTimestamp rec, " "
                                       , show $ srLevel rec, " "
                                       , srLogger rec, ": "
                                       , srMessage rec
