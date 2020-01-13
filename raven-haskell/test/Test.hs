@@ -8,12 +8,16 @@ import qualified Data.HashMap.Strict as HM
 import Data.Aeson (object, (.=))
 import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
 import Data.List (sort)
+import Data.Time (UTCTime(..), Day(..))
 
 import System.Log.Raven
 import qualified System.Log.Raven.Interfaces as SI
 import System.Log.Raven.Types as LT
 import System.Log.Raven.Transport.Debug (dumpRecord, briefRecord, catchRecord)
 import System.Log.Raven.Transport.HttpConduit (sendRecord)
+
+ts :: UTCTime
+ts = UTCTime (ModifiedJulianDay 40587) 0
 
 main :: IO ()
 main = hspec $ do
@@ -33,7 +37,7 @@ main = hspec $ do
         endpointURL ss `shouldBe` Just "http://example.com/sentry/api/project-id/store/"
 
     it "generates empty record" $ do
-        newRecord "" "" "" Debug "" `shouldBe` emptyRecord
+        newRecord "" "" ts Debug "" `shouldBe` emptyRecord
 
     it "generates record template" $ do
         r <- strip `fmap` test
@@ -219,28 +223,30 @@ ss = SentrySettings {
      }
 
 strip rec = rec { srEventId = ""
-                , srTimestamp = ""
+                , srTimestamp = ts
                 }
 
 test = record "test.logger" Debug "test record please ignore" id
 
-emptyRecord = SentryRecord { srEventId    = ""
-                              , srMessage    = ""
-                              , srTimestamp  = ""
-                              , srLevel      = Debug
-                              , srLogger     = ""
-                              , srPlatform   = Nothing
-                              , srCulprit    = Nothing
-                              , srTags       = HM.empty
-                              , srServerName = Nothing
-                              , srModules    = HM.empty
-                              , srExtra      = HM.empty
-                              , srInterfaces = HM.empty
-                              }
+emptyRecord = SentryRecord { srEventId     = ""
+                           , srMessage     = ""
+                           , srTimestamp   = ts
+                           , srLevel       = Debug
+                           , srLogger      = ""
+                           , srPlatform    = Nothing
+                           , srCulprit     = Nothing
+                           , srTags        = HM.empty
+                           , srServerName  = Nothing
+                           , srModules     = HM.empty
+                           , srExtra       = HM.empty
+                           , srInterfaces  = HM.empty
+                           , srRelease     = Nothing
+                           , srEnvironment = Nothing
+                           }
 
 testRecord = emptyRecord { srMessage = "test record please ignore"
                          , srLevel = Debug
                          , srLogger = "test.logger"
                          }
 
-testRecordLBS = LBS.pack "{\"timestamp\":\"\",\"message\":\"test record please ignore\",\"event_id\":\"\",\"level\":\"debug\",\"logger\":\"test.logger\"}"
+testRecordLBS = LBS.pack "{\"logger\":\"test.logger\",\"message\":\"test record please ignore\",\"event_id\":\"\",\"timestamp\":\"1970-01-01T00:00:00Z\",\"level\":\"debug\"}"
