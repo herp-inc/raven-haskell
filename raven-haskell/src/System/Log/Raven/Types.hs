@@ -101,7 +101,7 @@ data SentryRecord = SentryRecord { srEventId     :: !String
                                  , srTags        :: !Assoc
                                  , srServerName  :: Maybe String
                                  , srModules     :: !Assoc
-                                 , srExtra       :: !Assoc
+                                 , srExtra       :: HM.HashMap String Value
                                  , srInterfaces  :: HM.HashMap String Value
                                  , srRelease     :: Maybe String
                                  , srEnvironment :: Maybe String

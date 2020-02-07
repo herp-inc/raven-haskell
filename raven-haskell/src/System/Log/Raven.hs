@@ -54,7 +54,7 @@ module System.Log.Raven
     , record, recordLBS
     ) where
 
-import Data.Aeson (encode)
+import Data.Aeson (Value, encode)
 import Data.ByteString.Lazy (ByteString)
 
 import Data.UUID.Types (UUID)
@@ -142,5 +142,5 @@ tags :: [(String, String)] -> SentryRecord -> SentryRecord
 tags ts r = r { srTags = HM.fromList ts `HM.union` srTags r }
 
 -- | Add record extra information.
-extra :: [(String, String)] -> SentryRecord -> SentryRecord
+extra :: [(String, Value)] -> SentryRecord -> SentryRecord
 extra ts r =  r { srExtra = HM.fromList ts `HM.union` srExtra r }
