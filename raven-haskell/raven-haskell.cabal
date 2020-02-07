@@ -37,7 +37,7 @@ library
     text,
     time >= 1.5.0.1,
     unordered-containers,
-    uuid
+    uuid-types
 
 test-suite test
   type: exitcode-stdio-1.0

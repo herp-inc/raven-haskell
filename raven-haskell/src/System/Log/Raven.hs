@@ -57,7 +57,7 @@ module System.Log.Raven
 import Data.Aeson (encode)
 import Data.ByteString.Lazy (ByteString)
 
-import Data.UUID (UUID)
+import Data.UUID.Types (UUID)
 import System.Random (randomIO)
 import Data.Time.Clock (getCurrentTime)
 import System.IO (stderr, hPutStrLn)
