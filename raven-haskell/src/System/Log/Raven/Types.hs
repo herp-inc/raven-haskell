@@ -4,7 +4,7 @@
 --   Keep this under a pillow when writing custom wrappers.
 
 module System.Log.Raven.Types
-    ( SentrySettings(..), fromDSN, endpointURL
+    ( SentrySettings(..), fromDSN, parseDSN, endpointURL
     , SentryService(..)
     , SentryLevel(..), SentryRecord(..), newRecord
     ) where
@@ -29,11 +29,14 @@ data SentrySettings = SentryDisabled
 --
 -- > {PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}{PATH}/{PROJECT_ID}
 fromDSN :: String -> SentrySettings
-fromDSN "" = SentryDisabled
-fromDSN dsn@(fst . break (== ':') -> proto)
+fromDSN = either error id . parseDSN
+
+parseDSN :: String -> Either String SentrySettings
+parseDSN "" = return SentryDisabled
+parseDSN dsn@(fst . break (== ':') -> proto)
     | proto == "http"  = makeSettings "http"  . splitAt 7 $ dsn
     | proto == "https" = makeSettings "https" . splitAt 8 $ dsn
-    | otherwise = error $ "fromDSN: unknown protocol (" ++ proto ++ ")"
+    | otherwise = Left $ "parseDSN: unknown protocol (" ++ proto ++ ")"
     where
         body = break (== '@')
 
@@ -50,10 +53,10 @@ fromDSN dsn@(fst . break (== ':') -> proto)
 
         makeSettings pref (_, s) = verify $! SentrySettings (assemble pref s) (pub s) (priv s) (pid s)
 
-        verify (sentryURI -> "") = error "Empty URI"
-        verify (sentryPublicKey -> "") = error "Empty public key"
-        verify (sentryProjectId -> "") = error "Empty project id"
-        verify s = s
+        verify (sentryURI -> "") = Left "Empty URI"
+        verify (sentryPublicKey -> "") = Left "Empty public key"
+        verify (sentryProjectId -> "") = Left "Empty project id"
+        verify s = return s
 
 -- | Assemble http endpoint URL from settings.
 endpointURL :: SentrySettings -> Maybe String
