@@ -72,8 +72,10 @@ initRaven :: String                                    -- ^ Sentry DSN
           -> (SentrySettings -> SentryRecord -> IO ()) -- ^ Event transport from Raven.Transport.*
           -> (SentryRecord -> IO ())                   -- ^ Fallback handler.
           -> IO SentryService                          -- ^ Event service to use in 'register'.
-initRaven dsn d t fb = return
-    SentryService { serviceSettings = fromDSN dsn
+initRaven dsn d t fb = do
+  s <- either fail return $ parseDSN dsn
+  return $
+    SentryService { serviceSettings = s
                   , serviceDefaults = d
                   , serviceTransport = t
                   , serviceFallback = fb
