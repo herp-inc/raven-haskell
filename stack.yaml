@@ -1,9 +1,14 @@
-resolver: lts-14.20
+resolver: lts-18.21
 
 packages:
 - raven-haskell
 - raven-haskell-scotty
 
-extra-deps: []
-flags: {}
-extra-package-dbs: []
+extra-deps: # []
+- aeson-2.0.3.0
+- semialign-1.2.0.1
+- OneTuple-0.3.1
+
+allow-newer: true
+
+system-ghc: true
