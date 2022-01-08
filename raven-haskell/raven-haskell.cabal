@@ -1,5 +1,5 @@
 name:                raven-haskell
-version:             0.1.4.0
+version:             0.1.4.1
 synopsis:            Haskell client for Sentry logging service.
 -- description:
 homepage:            https://bitbucket.org/dpwiz/raven-haskell

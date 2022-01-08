@@ -12,6 +12,7 @@ module System.Log.Raven.Types
 import Data.Aeson (ToJSON(toJSON), Value, object, (.=))
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Text as T
+import Data.String (fromString)
 import Data.Time.Clock (UTCTime)
 
 -- * Service settings
@@ -128,8 +129,12 @@ instance ToJSON SentryRecord where
         , maybe [] (\v -> ["server_name" .= v]) $ srServerName r
         , if HM.null (srModules r) then [] else ["modules" .= srModules r]
         , if HM.null (srExtra r) then [] else ["extra" .= srExtra r]
-        , if HM.null (srInterfaces r) then [] else [ T.pack iface .= stuff
-                                                   | (iface, stuff) <- HM.toList $ srInterfaces r]
+        , if HM.null (srInterfaces r) then
+            []
+          else
+            [ fromString iface .= stuff
+            | (iface, stuff) <- HM.toList $ srInterfaces r
+            ]
         , maybe [] (\v -> ["release" .= v]) $ srRelease r
         , maybe [] (\v -> ["environment" .= v]) $ srEnvironment r
         ]
